@@ -19,6 +19,10 @@ main(void)
   dup(0);  // stdout
   dup(0);  // stderr
 
+  printf(1, "Welcome to HUFS xv6 Operating System! \n\n");
+  printf(1, "Name: Lee Hyun-ho\n");
+  printf(1, "ID: 201902927 \n\n\n");
+
   for(;;){
     printf(1, "init: starting sh\n");
     pid = fork();
@@ -35,3 +39,4 @@ main(void)
       printf(1, "zombie!\n");
   }
 }
+
