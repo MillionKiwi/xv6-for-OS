@@ -20,7 +20,7 @@ main(void)
   dup(0);  // stderr
 
   printf(1, "Welcome to HUFS xv6 Operating System! \n\n");
-  printf(1, "Name: Lee Hyun-ho\n");
+  printf(1, "Name: Lee Hyunho\n");
   printf(1, "ID: 201902927 \n\n\n");
 
   for(;;){
