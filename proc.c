@@ -323,9 +323,10 @@ void
 scheduler(void)
 {
   struct proc *p;
+  struct proc *p1;
+  struct proc *hp;
   struct cpu *c = mycpu();
-  c->proc = 0;
-  
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -335,25 +336,31 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+		
+      hp = p;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+      for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+        if(p1->state != RUNNABLE)
+	        continue;
+        if(hp->nice < p1->nice)
+	        hp = p1;
+      p = hp;
+      }
+
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
       // Process is done running for now.
-      // It should have changed its p->state before coming back.
+      // It should have changed its hp->state before coming back.
       c->proc = 0;
-    }
+      }
     release(&ptable.lock);
-
   }
 }
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
