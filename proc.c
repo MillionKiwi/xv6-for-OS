@@ -325,6 +325,7 @@ scheduler(void)
     struct proc *p;
     struct proc *hp = 0;
     struct cpu *c = mycpu();
+	char all_runned = 1;
 
     for(;;){
         // Enable interrupts on this processor.
@@ -341,7 +342,17 @@ scheduler(void)
             }
         }
 
-        // If no runnable process is found, release the lock and continue.
+		//Initialize runned state if every process was runned.
+		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+			if(p->runned != 1)
+				all_runned = 0;
+		}
+		if(all_runned == 1){
+			for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+				p->runned = 0;
+			}
+		}
+
         if(hp == 0) {
             release(&ptable.lock);
             continue;
@@ -369,6 +380,7 @@ scheduler(void)
         release(&ptable.lock);
     }
 }
+
 
 
 
