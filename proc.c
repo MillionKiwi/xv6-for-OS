@@ -319,47 +319,57 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
+void 
 scheduler(void)
 {
-  struct proc *p;
-  struct proc *p1;
-  struct proc *hp;
-  struct cpu *c = mycpu();
+    struct proc *p;
+    struct proc *hp = 0;
+    struct cpu *c = mycpu();
 
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
+    for(;;){
+        // Enable interrupts on this processor.
+        sti();
 
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-		
-      hp = p;
+        // Loop over process table looking for process to run.
+        acquire(&ptable.lock);
+        
+        // Initialize hp to the first RUNNABLE process.
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+            if(p->state == RUNNABLE) {
+                hp = p;
+                break;
+            }
+        }
 
-      for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
-        if(p1->state != RUNNABLE)
-	        continue;
-        if(hp->nice < p1->nice)
-	        hp = p1;
-      p = hp;
-      }
+        // If no runnable process is found, release the lock and continue.
+        if(hp == 0) {
+            release(&ptable.lock);
+            continue;
+        }
 
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+        // Find the not runned process with the highest nice value.
+		// bonus when it remaining ticks -> higher priority 
+        for(; p < &ptable.proc[NPROC]; p++){
+            if(p->state == RUNNABLE && (p->nice * 20 + p->timeslice) > (hp->nice * 20 + p->timeslice) && p->runned != 1)
+                hp = p;
+        }
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-      // Process is done running for now.
-      // It should have changed its hp->state before coming back.
-      c->proc = 0;
-      }
-    release(&ptable.lock);
-  }
+        // Switch to chosen process.
+        c->proc = hp;
+        switchuvm(hp);
+        hp->state = RUNNING;
+
+        swtch(&(c->scheduler), hp->context);
+        switchkvm();
+        
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+
+        release(&ptable.lock);
+    }
 }
+
 
 
 // Enter scheduler.  Must hold only ptable.lock
