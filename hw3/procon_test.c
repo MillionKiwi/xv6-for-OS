@@ -20,7 +20,7 @@ int main(void)
     empty = sem_create(1);
     full = sem_create(0);
 
-
+    //thread 생성
     int p1 = hufs_thread_create(&producer, 0);
     int p2 = hufs_thread_create(&producer, 0);
     int c1 = hufs_thread_create(&consumer, 0);
